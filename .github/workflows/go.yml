@@ -29,15 +29,17 @@ jobs:
       id: CreateNewRelease
       uses: actions/create-release@v1
       env:
-        GITHUB_TOKEN: ${{  secrets.releaseArtifact  }}
+        GITHUB_TOKEN: ${{  secrets.GITHUB_TOKEN  }}
       with:
         tag_name: v${{  github.run_number  }}
-        release_name: Release V${{  github.run_number  }}
+        release_name: Release V${{  secrets.GITHUB_TOKEN  }}
+        # github.run_number  }}
         
     - name: Upload artifact for windows
       uses: actions/upload-artifact@v1.0.0
       env:
-        GITHUB_TOKEN: ${{  secrets.releaseArtifact  }}
+        GITHUB_TOKEN: ${{  secrets.GITHUB_TOKEN  }}
+        # secrets.releaseArtifact  }}
       with:
         name: windows
         path: ./${{ env.FILE_NAME }}.exe
