@@ -1,0 +1,42 @@
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: Go
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.19
+
+    - name: Build ${{ env.FILE_NAME }} for windows-latest
+      run: GOOS=windows GOARCH=amd64 go build ${{ env.FILE_NAME }}.go
+      
+    - name: Create new release
+      id: CreateNewRelease
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{  secrets.releaseArtifact  }}
+      with:
+        tag_name: v${{  github.run_number  }}
+        release_name: Release V${{  github.run_number  }}
+        
+    - name: Upload artifact for windows
+      uses: actions/upload-artifact@v1.0.0
+      env:
+        GITHUB_TOKEN: ${{  secrets.releaseArtifact  }}
+      with:
+        name: windows
+        path: ./${{ env.FILE_NAME }}.exe
