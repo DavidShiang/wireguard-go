@@ -1,14 +1,8 @@
-# This workflow will build a golang project
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
-
 name: Build and Release Windows Executable
+
 on:
-  push:
-    branches: [ "master" ]
-  #pull_request:
-  #  branches: [ "master" ]
-  #tags:
-  #  - "v*"
+  release:
+    types: [created, published]
 
 jobs:
   build:
@@ -51,7 +45,7 @@ jobs:
         id: get_release_tag
         run: |
           RELEASE_TAG="${GITHUB_REF#refs/tags/}"
-          echo "::set-output name=release_tag::$RELEASE_TAG"
+          echo "release_tag=$RELEASE_TAG" >> $GITHUB_ENV # Use environment file
 
       - name: Create/Update Release
         id: create_release
@@ -59,8 +53,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ steps.get_release_tag.outputs.release_tag }} # Use the extracted tag
-          release_name: Release v${{ steps.get_release_tag.outputs.release_tag }}
+          tag_name: v${{ env.release_tag }} # Access from environment
+          release_name: Release v${{ env.release_tag }}
           body: |
             Windows executable for WireGuard-go.
 
@@ -68,5 +62,4 @@ jobs:
             # Add your release notes here
             ```
           files: wireguard-go.exe
-        # This is CRUCIAL for updating an existing release
-        if: github.event_name == 'release' && github.event.action == 'published' # Only run on "published" releases
+        if: github.event_name == 'release' && github.event.action == 'published'
