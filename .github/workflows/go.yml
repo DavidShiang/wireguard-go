@@ -18,14 +18,14 @@ jobs:
         with:
           go-version: '^1.20'
 
-      - name: Build WireGuard-go
-        run: go build -o wireguard-go.exe
+      - name: Build WireGuard-go (using Makefile)
+        run: make wireguard-go  # Use the Makefile!
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: wireguard-go-windows
-          path: wireguard-go.exe
+          path: wireguard-go.exe # Assuming the Makefile builds to the root directory
           retention-days: 7
 
   release:
@@ -45,7 +45,7 @@ jobs:
         id: get_release_tag
         run: |
           RELEASE_TAG="${GITHUB_REF#refs/tags/}"
-          echo "release_tag=$RELEASE_TAG" >> $GITHUB_ENV # Use environment file
+          echo "release_tag=$RELEASE_TAG" >> $GITHUB_ENV
 
       - name: Create/Update Release
         id: create_release
@@ -53,7 +53,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ env.release_tag }} # Access from environment
+          tag_name: v${{ env.release_tag }}
           release_name: Release v${{ env.release_tag }}
           body: |
             Windows executable for WireGuard-go.
