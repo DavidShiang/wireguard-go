@@ -1,7 +1,7 @@
 # This workflow will build a golang project
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
 
-name: Build release
+name: Build and Release Windows Executable
 on:
   push:
     branches: [ "master" ]
@@ -10,15 +10,53 @@ on:
   #tags:
   #  - "v*"
 jobs:
-  release-windows-amd64:
-    name: release windows/amd64
-    runs-on: ubuntu-latest
+  build:
+    name: Build on Windows
+    runs-on: windows-latest
+
     steps:
-    - uses: actions/checkout@master
-    - name: compile and release
-      uses: ngs/go-release.action@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        GOARCH: amd64
-        GOOS: windows
-        EXTRA_FILES: "LICENSE"
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '^1.20' # 你可以指定你需要的 Go 版本
+
+      - name: Build WireGuard-go
+        run: go build -o wireguard-go.exe
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: wireguard-go-windows
+          path: wireguard-go.exe
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: wireguard-go-windows
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ github.event.release.tag_name }}
+          release_name: Release v${{ github.event.release.tag_name }}
+          body: |
+            Windows executable for WireGuard-go.
+
+            ```
+            # 你可以在这里添加你的发行说明
+            ```
+          files: wireguard-go.exe
